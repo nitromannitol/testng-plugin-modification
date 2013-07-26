@@ -67,7 +67,6 @@ public class MethodResult extends BaseResult {
         
         PrintWriter writer = new PrintWriter("tags/" + filename.concat(".xml"), "UTF-8");
         
-        System.out.print("write: "); System.out.println("tags/" + filename.concat(".xml"));
         
         writeTagged(writer,type, "Type");
         writeTagged(writer,duration,"Duration");
@@ -83,10 +82,6 @@ public class MethodResult extends BaseResult {
         this.error_type = type;
     }
 	public String getErrorType(){
-            System.out.print("name: "); System.out.println(name);
-            System.out.print("date: "); System.out.println(startedAt);
-            
-     
 
 	if(!error_set) return null;
 	else if(error_type) return "Product Bug";
@@ -128,7 +123,6 @@ public class MethodResult extends BaseResult {
         
         }
         catch (FileNotFoundException e){
-            System.out.println("Not found");
             this.error_set = false;
         }
     } 
@@ -166,6 +160,8 @@ public class MethodResult extends BaseResult {
         this.parentTestName = parentTestName;
         this.parentSuiteName = parentSuiteName;
         this.startedAt = startedAt;
+        
+        //Determine the error type from the XML file
         determineErrorType();
         
      
