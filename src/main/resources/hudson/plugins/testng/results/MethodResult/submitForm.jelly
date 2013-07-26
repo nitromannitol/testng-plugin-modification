@@ -2,7 +2,6 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:g="glide">
     
     <!-- This will render the status of the test -->
-    <f:block>
         <f:form action = "write/" method = "post" name = "form">
             <f:entry>
                 <f:booleanRadio field ="type" true = "Product Error" false = "Automation Error"/>
@@ -26,6 +25,5 @@
                 <f:submit value ="Submit"/>
             </f:entry>
         </f:form>
-    </f:block>
     
 </j:jelly>

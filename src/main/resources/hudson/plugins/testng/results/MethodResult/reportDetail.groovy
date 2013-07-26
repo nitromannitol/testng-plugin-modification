@@ -107,6 +107,7 @@ div(id: "report") {
             }
         }
         div(){
+        b("Form:")
         p(id:"exp-st2"){
             st.include(page:"submitForm.jelly",it:my);
 	}

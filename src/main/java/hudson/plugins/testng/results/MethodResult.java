@@ -55,9 +55,9 @@ public class MethodResult extends BaseResult {
 
 
          public void writeTagged(PrintWriter writer, Object input, String tag){
-        writer.print("\n<".concat(tag).concat(">"));
+        writer.print("<".concat(tag).concat(">"));
         writer.print(input);
-        writer.print("</".concat(tag).concat(">"));
+        writer.print("</".concat(tag).concat(">\n"));
     }
     
     /*Writes test results to a file stored on the server*/
@@ -66,8 +66,7 @@ public class MethodResult extends BaseResult {
     throws FileNotFoundException, UnsupportedEncodingException{
         
         PrintWriter writer = new PrintWriter("tags/" + filename.concat(".xml"), "UTF-8");
-        
-        
+
         writeTagged(writer,type, "Type");
         writeTagged(writer,duration,"Duration");
         writeTagged(writer,errorS,"ErrorS");
@@ -118,7 +117,9 @@ public class MethodResult extends BaseResult {
             File file = new File("tags/" + name + startedAt + ".xml");
             Scanner scan = new Scanner(file);
             String errorType = scan.nextLine();
-            if(errorType.equals("true")) this.error_type = true;
+            System.out.println(errorType);
+            if(errorType.equals("<Type>true</Type>")) this.error_type = true;
+            
             this.error_set = true;
         
         }
