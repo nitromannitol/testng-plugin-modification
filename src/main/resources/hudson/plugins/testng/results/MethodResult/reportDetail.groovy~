@@ -22,11 +22,6 @@ div(id: "report") {
     span(class: "${my.cssClass}", id: "status") {
         h1("${my.status}")
     }
-    
-       if(my.errorType){
-           h1("${my.errorType}")
-       }
-    
 
     div(id: "description") {
         //descriptions by default are escaped in testng result XML
@@ -87,7 +82,10 @@ div(id: "report") {
         }
     }
 
-    if (my.exception) {   
+    if (my.exception) {
+	h3(){
+	st.include(page:"submitForm.jelly",it:my);
+	}
         h3() {
             text("Exception ")
             i("${my.exception.exceptionName}")
@@ -105,11 +103,6 @@ div(id: "report") {
             p(id:"exp-st") {
                 raw("${FormatUtil.formatStackTraceForHTML(my.exception.stackTrace)}")
             }
-        }
-        div(){
-        p(id:"exp-st2"){
-            st.include(page:"submitForm.jelly",it:my);
-	}
         }
     }
 }

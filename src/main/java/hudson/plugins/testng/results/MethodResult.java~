@@ -2,7 +2,6 @@ package hudson.plugins.testng.results;
 
 import java.io.IOException;
 import java.util.*;
-import java.io.*;
 
 import hudson.model.AbstractBuild;
 import hudson.plugins.testng.TestNGTestResultBuildAction;
@@ -11,12 +10,10 @@ import hudson.tasks.test.TestResult;
 import hudson.util.ChartUtil;
 import hudson.util.DataSetBuilder;
 import hudson.util.Graph;
-import hudson.XmlFile;
 import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
-import javax.servlet.*;
 
 /**
  * Handles result pertaining to a single test method
@@ -31,11 +28,11 @@ public class MethodResult extends BaseResult {
     //is configuration method or not
     private boolean isConfig;
     //duration in seconds
-    public float duration;
+    private float duration;
     //Exception thrown on running this test method (if any)
     private MethodResultException exception;
     //start time
-    public Date startedAt;
+    private Date startedAt;
     //a test instance name if one is provided using ITest interface
     private String testInstanceName;
     //name of the <test> containing this method
@@ -50,43 +47,11 @@ public class MethodResult extends BaseResult {
     private String reporterOutput;
 
     /********************* ADDITIONAL CODE *****************/
-	public boolean error_set;
+	private boolean error_set;
 	private boolean error_type;
 
 
-         public void writeTagged(PrintWriter writer, Object input, String tag){
-        writer.print("\n<".concat(tag).concat(">"));
-        writer.print(input);
-        writer.print("</".concat(tag).concat(">"));
-    }
-    
-    /*Writes test results to a file stored on the server*/
-    public synchronized void writeTestResults(boolean type, String filename, 
-            String duration, String errorS, String errorM)
-    throws FileNotFoundException, UnsupportedEncodingException{
-        
-        PrintWriter writer = new PrintWriter("tags/" + filename.concat(".xml"), "UTF-8");
-        
-        System.out.print("write: "); System.out.println("tags/" + filename.concat(".xml"));
-        
-        writeTagged(writer,type, "Type");
-        writeTagged(writer,duration,"Duration");
-        writeTagged(writer,errorS,"ErrorS");
-        writeTagged(writer,errorM,"ErrorM");
-        
-        writer.close();
-    } 
-        
-    
-    public void setErrorType(boolean type){
-        this.error_set = true;
-        this.error_type = type;
-    }
 	public String getErrorType(){
-            System.out.print("name: "); System.out.println(name);
-            System.out.print("date: "); System.out.println(startedAt);
-            
-     
 
 	if(!error_set) return null;
 	else if(error_type) return "Product Bug";
@@ -96,42 +61,22 @@ public class MethodResult extends BaseResult {
 
 	
 	 
-	public void doWrite(StaplerRequest request, StaplerResponse response) throws ServletException, IOException, FileNotFoundException, UnsupportedEncodingException
+	public void doWrite(StaplerRequest request, StaplerResponse response)
+    		throws ServletException, IOException, FileNotFoundException, UnsupportedEncodingException
 	{
 
         //Get the parameters from the form
         boolean type = request.getSubmittedForm().getBoolean("type");
-        String testName = request.getSubmittedForm().getString("testName");
-        String date = request.getSubmittedForm().getString("date");
-        
-        String d = request.getSubmittedForm().getString("duration");
-        String errorS = request.getSubmittedForm().getString("errorS");
-        String errorM = request.getSubmittedForm().getString("errorM");
-      
-        
-        this.setErrorType(type);
-        
-        writeTestResults(type,testName + date,d,errorS,errorM);
-        
-        response.forwardToPreviousPage(request); 
+        String id = request.getSubmittedForm().getString("id");
+
+         //Set the error type
+	error_set = true;
+	error_type = type;
+
+
+        response.forwardToPreviousPage(request);
         
      }
-        
-        /*Read from the data file to see what error type this should be*/
-    public synchronized final void determineErrorType(){
-        try{
-            File file = new File("tags/" + name + startedAt + ".xml");
-            Scanner scan = new Scanner(file);
-            String errorType = scan.nextLine();
-            if(errorType.equals("true")) this.error_type = true;
-            this.error_set = true;
-        
-        }
-        catch (FileNotFoundException e){
-            System.out.println("Not found");
-            this.error_set = false;
-        }
-    } 
 
 
 /**************** End additional code ********************/
@@ -166,11 +111,7 @@ public class MethodResult extends BaseResult {
         this.parentTestName = parentTestName;
         this.parentSuiteName = parentSuiteName;
         this.startedAt = startedAt;
-        determineErrorType();
-        
-     
-     
-        
+
         try {
             this.duration = (float) Long.parseLong(duration) / 1000f;
         } catch (NumberFormatException e) {

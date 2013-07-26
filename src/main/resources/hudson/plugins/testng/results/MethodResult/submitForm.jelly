@@ -1,0 +1,31 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:g="glide">
+    
+    <!-- This will render the status of the test -->
+    <f:block>
+        <f:form action = "write/" method = "post" name = "form">
+            <f:entry>
+                <f:booleanRadio field ="type" true = "Product Error" false = "Automation Error"/>
+            </f:entry>
+            <f:invisibleEntry>
+                <input type = "hidden" name = "testName" value = "${it.name}"/>
+            </f:invisibleEntry>
+            <f:invisibleEntry>
+                <input type = "hidden" name = "date" value = "${it.startedAt}"/>
+            </f:invisibleEntry>
+               <f:invisibleEntry>
+                <input type = "hidden" name = "duration" value = "${it.duration}"/>
+            </f:invisibleEntry>
+            <f:invisibleEntry>
+                <input type = "hidden" name = "errorS" value = "${it.errorStackTrace}"/>
+            </f:invisibleEntry>
+            <f:invisibleEntry>
+                <input type = "hidden" name = "errorM" value = "${it.errorDetails}"/>
+            </f:invisibleEntry> 
+            <f:entry>
+                <f:submit value ="Submit"/>
+            </f:entry>
+        </f:form>
+    </f:block>
+    
+</j:jelly>
