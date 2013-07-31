@@ -54,18 +54,31 @@ public class MethodResult extends BaseResult {
 	private boolean error_type;
 
 
-         public void writeTagged(PrintWriter writer, Object input, String tag){
-        writer.print("<".concat(tag).concat(">"));
-        writer.print(input);
-        writer.print("</".concat(tag).concat(">\n"));
+         public void writeTagged(Writer writer, Object input, String tag)
+             throws IOException{
+        writer.write("<".concat(tag).concat(">"));
+        writer.write(input.toString());
+        writer.write("</".concat(tag).concat(">\n"));
+             
+           
     }
     
     /*Writes test results to a file stored on the server*/
     public synchronized void writeTestResults(boolean type, String filename, 
             String duration, String errorS, String errorM)
-    throws FileNotFoundException, UnsupportedEncodingException{
+    throws FileNotFoundException, UnsupportedEncodingException, IOException{
+        File dir = new File("tags");
+        if(!dir.exists()){
+            dir.mkdir();
+        }
+        File file = new File("tags/" + filename.concat(".xml"));
+        if(!file.exists()) {
+            file.createNewFile();
+        }
+        FileOutputStream is = new FileOutputStream(file);
+        OutputStreamWriter osw = new OutputStreamWriter(is);
+        Writer writer = new BufferedWriter(osw);
         
-        PrintWriter writer = new PrintWriter("tags/" + filename.concat(".xml"), "UTF-8");
 
         writeTagged(writer,type, "Type");
         writeTagged(writer,duration,"Duration");
@@ -105,11 +118,13 @@ public class MethodResult extends BaseResult {
         
         this.setErrorType(type);
         
+      
+        
         writeTestResults(type,testName + date,d,errorS,errorM);
         
         response.forwardToPreviousPage(request); 
         
-     }
+        }
         
         /*Read from the data file to see what error type this should be*/
     public synchronized final void determineErrorType(){
@@ -117,9 +132,10 @@ public class MethodResult extends BaseResult {
             File file = new File("tags/" + name + startedAt + ".xml");
             Scanner scan = new Scanner(file);
             String errorType = scan.nextLine();
-            System.out.println(errorType);
             if(errorType.equals("<Type>true</Type>")) this.error_type = true;
-            
+            else{
+                this.error_type = false;
+            }
             this.error_set = true;
         
         }
