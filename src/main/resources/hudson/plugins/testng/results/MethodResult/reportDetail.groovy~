@@ -12,7 +12,6 @@ st = namespace("jelly:stapler")
 def testngProjAction = my.owner.project.getAction(TestNGProjectAction.class)
 
 div(id: "report") {
-    h1("${my.name}")
     text("(from ")
     a(href: "${my.parent.upUrl}", id: "parent") {
         text("${my.parent.name}")
@@ -22,6 +21,11 @@ div(id: "report") {
     span(class: "${my.cssClass}", id: "status") {
         h1("${my.status}")
     }
+    
+       if(my.showError(app.rootDir.getPath(),my.parent.name,my.owner.toString())){
+           h1("${my.showError(app.rootDir.getPath(),my.parent.name,my.owner.toString())}")
+       }
+    
 
     div(id: "description") {
         //descriptions by default are escaped in testng result XML
@@ -82,10 +86,7 @@ div(id: "report") {
         }
     }
 
-    if (my.exception) {
-	h3(){
-	st.include(page:"submitForm.jelly",it:my);
-	}
+    if (my.exception) {   
         h3() {
             text("Exception ")
             i("${my.exception.exceptionName}")
@@ -103,6 +104,12 @@ div(id: "report") {
             p(id:"exp-st") {
                 raw("${FormatUtil.formatStackTraceForHTML(my.exception.stackTrace)}")
             }
+        }
+        div(){
+        b("Form:")
+        p(id:"exp-st2"){
+            st.include(page:"submitForm.jelly",it:my);
+	}
         }
     }
 }

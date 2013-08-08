@@ -53,7 +53,6 @@ public class MethodResult extends BaseResult {
 	public boolean error_set;
 	private boolean error_type;
 
-
          public void writeTagged(Writer writer, Object input, String tag)
              throws IOException{
         writer.write("<".concat(tag).concat(">"));
@@ -65,16 +64,14 @@ public class MethodResult extends BaseResult {
     
     /*Writes test results to a file stored on the server*/
     public synchronized void writeTestResults(boolean type, String filename, 
-            String duration, String errorS, String errorM)
-    throws FileNotFoundException, UnsupportedEncodingException, IOException{
-        File dir = new File("tags");
-        if(!dir.exists()){
-            dir.mkdir();
-        }
-        File file = new File("tags/" + filename.concat(".xml"));
-        if(!file.exists()) {
-            file.createNewFile();
-        }
+            String duration, String errorS, String errorM, String path, String buildName)
+    throws UnsupportedEncodingException, IOException, FileNotFoundException{
+	String[] parts = buildName.split("#");
+	String build = parts[0];
+	String number = parts[1];
+        File file = new File(path + "/tags/" + build + "/" + number + "/" +  filename + ".xml");
+	file.getParentFile().mkdirs();
+       	file.createNewFile();
         FileOutputStream is = new FileOutputStream(file);
         OutputStreamWriter osw = new OutputStreamWriter(is);
         Writer writer = new BufferedWriter(osw);
@@ -93,7 +90,11 @@ public class MethodResult extends BaseResult {
         this.error_set = true;
         this.error_type = type;
     }
-	public String getErrorType(){
+
+	public String showError(String root, String parentName, String buildName){
+
+	//Determine the error type from the XML file
+        determineErrorType(root, parentName,buildName);
 
 	if(!error_set) return null;
 	else if(error_type) return "Product Bug";
@@ -109,27 +110,32 @@ public class MethodResult extends BaseResult {
         //Get the parameters from the form
         boolean type = request.getSubmittedForm().getBoolean("type");
         String testName = request.getSubmittedForm().getString("testName");
-        String date = request.getSubmittedForm().getString("date");
+        //String date = request.getSubmittedForm().getString("date");
+	String parentName = request.getSubmittedForm().getString("parent_name");
+	String buildName = request.getSubmittedForm().getString("build_name");
         
         String d = request.getSubmittedForm().getString("duration");
         String errorS = request.getSubmittedForm().getString("errorS");
         String errorM = request.getSubmittedForm().getString("errorM");
-      
+      	String path = request.getSubmittedForm().getString("path");
+	
+
         
         this.setErrorType(type);
-        
-      
-        
-        writeTestResults(type,testName + date,d,errorS,errorM);
+   
+        writeTestResults(type,parentName + "." + testName,d,errorS,errorM, path, buildName);
         
         response.forwardToPreviousPage(request); 
         
         }
         
         /*Read from the data file to see what error type this should be*/
-    public synchronized final void determineErrorType(){
+    public synchronized final void determineErrorType(String root, String parent, String build){
         try{
-            File file = new File("tags/" + name + startedAt + ".xml");
+	String[] parts = build.split("#");
+	String buildName = parts[0];
+	String number = parts[1];
+            File file = new File(root + "/tags/" + buildName + "/" + number + "/" +  parent + "." + name + ".xml");
             Scanner scan = new Scanner(file);
             String errorType = scan.nextLine();
             if(errorType.equals("<Type>true</Type>")) this.error_type = true;
@@ -137,6 +143,7 @@ public class MethodResult extends BaseResult {
                 this.error_type = false;
             }
             this.error_set = true;
+		
         
         }
         catch (FileNotFoundException e){
@@ -158,6 +165,8 @@ public class MethodResult extends BaseResult {
      */
     private String testUuid;
 
+    
+
     public MethodResult(String name,
                         String status,
                         String description,
@@ -178,8 +187,7 @@ public class MethodResult extends BaseResult {
         this.parentSuiteName = parentSuiteName;
         this.startedAt = startedAt;
         
-        //Determine the error type from the XML file
-        determineErrorType();
+        
         
      
      

@@ -2,6 +2,7 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:g="glide">
     
     <!-- This will render the status of the test -->
+
         <f:form action = "write/" method = "post" name = "form">
             <f:entry>
                 <f:booleanRadio field ="type" true = "Product Error" false = "Automation Error"/>
@@ -20,6 +21,15 @@
             </f:invisibleEntry>
             <f:invisibleEntry>
                 <input type = "hidden" name = "errorM" value = "${it.errorDetails}"/>
+            </f:invisibleEntry> 
+	    <f:invisibleEntry>
+                <input type = "hidden" name = "path" value = "${app.rootDir}"/>
+            </f:invisibleEntry> 
+	     <f:invisibleEntry>
+                <input type = "hidden" name = "build_name" value = "${it.owner}"/>
+            </f:invisibleEntry> 
+		<f:invisibleEntry>
+                <input type = "hidden" name = "parent_name" value = "${it.parent.name}"/>
             </f:invisibleEntry> 
             <f:entry>
                 <f:submit value ="Submit"/>

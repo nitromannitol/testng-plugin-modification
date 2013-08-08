@@ -2,6 +2,7 @@ package hudson.plugins.testng.results;
 
 import java.io.IOException;
 import java.util.*;
+import java.io.*;
 
 import hudson.model.AbstractBuild;
 import hudson.plugins.testng.TestNGTestResultBuildAction;
@@ -10,10 +11,12 @@ import hudson.tasks.test.TestResult;
 import hudson.util.ChartUtil;
 import hudson.util.DataSetBuilder;
 import hudson.util.Graph;
+import hudson.XmlFile;
 import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
+import javax.servlet.*;
 
 /**
  * Handles result pertaining to a single test method
@@ -28,11 +31,11 @@ public class MethodResult extends BaseResult {
     //is configuration method or not
     private boolean isConfig;
     //duration in seconds
-    private float duration;
+    public float duration;
     //Exception thrown on running this test method (if any)
     private MethodResultException exception;
     //start time
-    private Date startedAt;
+    public Date startedAt;
     //a test instance name if one is provided using ITest interface
     private String testInstanceName;
     //name of the <test> containing this method
@@ -47,11 +50,51 @@ public class MethodResult extends BaseResult {
     private String reporterOutput;
 
     /********************* ADDITIONAL CODE *****************/
-	private boolean error_set;
+	public boolean error_set;
 	private boolean error_type;
 
+         public void writeTagged(Writer writer, Object input, String tag)
+             throws IOException{
+        writer.write("<".concat(tag).concat(">"));
+        writer.write(input.toString());
+        writer.write("</".concat(tag).concat(">\n"));
+             
+           
+    }
+    
+    /*Writes test results to a file stored on the server*/
+    public synchronized void writeTestResults(boolean type, String filename, 
+            String duration, String errorS, String errorM, String path, String buildName)
+    throws UnsupportedEncodingException, IOException, FileNotFoundException{
+	String[] parts = buildName.split("#");
+	String build = parts[0];
+	String number = parts[1];
+        File file = new File(path + "/tags/" + build + "/" + number + "/" +  filename + ".xml");
+	file.getParentFile().mkdirs();
+       	file.createNewFile();
+        FileOutputStream is = new FileOutputStream(file);
+        OutputStreamWriter osw = new OutputStreamWriter(is);
+        Writer writer = new BufferedWriter(osw);
+        
 
-	public String getErrorType(){
+        writeTagged(writer,type, "Type");
+        writeTagged(writer,duration,"Duration");
+        writeTagged(writer,errorS,"ErrorS");
+        writeTagged(writer,errorM,"ErrorM");
+        
+        writer.close();
+    } 
+        
+    
+    public void setErrorType(boolean type){
+        this.error_set = true;
+        this.error_type = type;
+    }
+
+	public String showError(String root, String parentName, String buildName){
+
+	//Determine the error type from the XML file
+        determineErrorType(root, parentName,buildName);
 
 	if(!error_set) return null;
 	else if(error_type) return "Product Bug";
@@ -61,22 +104,52 @@ public class MethodResult extends BaseResult {
 
 	
 	 
-	public void doWrite(StaplerRequest request, StaplerResponse response)
-    		throws ServletException, IOException, FileNotFoundException, UnsupportedEncodingException
+	public void doWrite(StaplerRequest request, StaplerResponse response) throws ServletException, IOException, FileNotFoundException, UnsupportedEncodingException
 	{
 
         //Get the parameters from the form
         boolean type = request.getSubmittedForm().getBoolean("type");
-        String id = request.getSubmittedForm().getString("id");
-
-         //Set the error type
-	error_set = true;
-	error_type = type;
-
-
-        response.forwardToPreviousPage(request);
+        String testName = request.getSubmittedForm().getString("testName");
+        //String date = request.getSubmittedForm().getString("date");
+	String parentName = request.getSubmittedForm().getString("parent_name");
+	String buildName = request.getSubmittedForm().getString("build_name");
         
-     }
+        String d = request.getSubmittedForm().getString("duration");
+        String errorS = request.getSubmittedForm().getString("errorS");
+        String errorM = request.getSubmittedForm().getString("errorM");
+      	String path = request.getSubmittedForm().getString("path");
+	
+
+        
+        this.setErrorType(type);
+   
+        writeTestResults(type,parentName + "." + testName,d,errorS,errorM, path, buildName);
+        
+        response.forwardToPreviousPage(request); 
+        
+        }
+        
+        /*Read from the data file to see what error type this should be*/
+    public synchronized final void determineErrorType(String root, String parent, String build){
+        try{
+	String[] parts = build.split("#");
+	String build = parts[0];
+	String number = parts[1];
+            File file = new File(root + "/tags/" + build + "/" + number + "/" +  parent + "." + name + ".xml");
+            Scanner scan = new Scanner(file);
+            String errorType = scan.nextLine();
+            if(errorType.equals("<Type>true</Type>")) this.error_type = true;
+            else{
+                this.error_type = false;
+            }
+            this.error_set = true;
+		
+        
+        }
+        catch (FileNotFoundException e){
+            this.error_set = false;
+        }
+    } 
 
 
 /**************** End additional code ********************/
@@ -91,6 +164,8 @@ public class MethodResult extends BaseResult {
      * unique id for this test method
      */
     private String testUuid;
+
+    
 
     public MethodResult(String name,
                         String status,
@@ -111,7 +186,12 @@ public class MethodResult extends BaseResult {
         this.parentTestName = parentTestName;
         this.parentSuiteName = parentSuiteName;
         this.startedAt = startedAt;
-
+        
+        
+        
+     
+     
+        
         try {
             this.duration = (float) Long.parseLong(duration) / 1000f;
         } catch (NumberFormatException e) {

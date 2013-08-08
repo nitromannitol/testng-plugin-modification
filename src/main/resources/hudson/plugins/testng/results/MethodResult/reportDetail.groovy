@@ -12,7 +12,6 @@ st = namespace("jelly:stapler")
 def testngProjAction = my.owner.project.getAction(TestNGProjectAction.class)
 
 div(id: "report") {
-    h1("${my.name}")
     text("(from ")
     a(href: "${my.parent.upUrl}", id: "parent") {
         text("${my.parent.name}")
@@ -23,8 +22,8 @@ div(id: "report") {
         h1("${my.status}")
     }
     
-       if(my.errorType){
-           h1("${my.errorType}")
+       if(my.showError(app.rootDir.getPath(),my.parent.name,my.owner.toString())){
+           h1("${my.showError(app.rootDir.getPath(),my.parent.name,my.owner.toString())}")
        }
     
 
